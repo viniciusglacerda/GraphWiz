@@ -32,12 +32,12 @@ class BaseManipulation:
     def create_edge(self, vertex_1:int, vertex_2:int) -> None:
         # Deve ser implementado criação de arestas
         self.graph[vertex_1-1][vertex_2-1] = 1
-        if self.is_directed: self.graph[vertex_2-1][vertex_1-1] = 1
+        if not self.is_directed: self.graph[vertex_2-1][vertex_1-1] = 1
     
     def remove_edge(self, vertex_1:int, vertex_2:int) -> None:
         # Remoção de arestas
         self.graph[vertex_1-1][vertex_2-1] = 0
-        if self.is_directed: self.graph[vertex_2-1][vertex_1-1] = 0
+        if not self.is_directed: self.graph[vertex_2-1][vertex_1-1] = 0
     
     def vertex_weighting(self, vertex_1:int, vertex_2:int, weight:int) -> None:
         # Ponderação de vértices
@@ -50,7 +50,7 @@ class BaseManipulation:
     def edge_weighting(self, vertex_1:int, vertex_2:int, weight:int=1) -> None:
         # Ponderação de arestas
         self.graph[vertex_1-1][vertex_2-1] = weight
-        if self.is_directed: self.graph[vertex_2-1][vertex_1-1] = weight
+        if not self.is_directed: self.graph[vertex_2-1][vertex_1-1] = weight
 
     def edge_labeling(self):
         # Rotulação de arestas
@@ -91,16 +91,16 @@ class BaseManipulation:
         # Checa se o grafo é completo
         ...
 
-vertices = {
-    vertice[int]: {
-        label[str],
-        weight[int],
-        vizinhança[list[int|str]],
-    }
-}
-arestas = {
-    aresta[int]: {
-        label[str],
-        weight[int]
-    }
-}
+# vertices = {
+#     vertice[int]: {
+#         label[str],
+#         weight[int],
+#         vizinhança[list[int|str]],
+#     }
+# }
+# arestas = {
+#     aresta[int]: {
+#         label[str],
+#         weight[int]
+#     }
+# }
