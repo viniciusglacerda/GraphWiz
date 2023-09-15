@@ -1,5 +1,3 @@
-
-        
 class BaseManipulation:
     def __init__(self, vertex:int=0, is_directed:bool=False, vertex_labels:list[str]=[]) -> None:
         # Deve ser implementado a criação de um grafo com X vértices (o número de vértices deve ser inserido pelo usuário)
@@ -56,9 +54,9 @@ class BaseManipulation:
         # Rotulação de arestas
         ...
 
-    def vertex_adjacency_check(self):
+    def vertex_adjacency_check(self, vertex_1, vertex_2) -> bool:
         # Checagem de adjacencia entre vertices
-        ...
+        return True if self.graph[vertex_1][vertex_2] else False
     
     def edge_adjacency_check(self):
         # Checagem de adjacencia entre arestas
@@ -66,9 +64,7 @@ class BaseManipulation:
     
     def exist_edge(self, vertex_1:int, vertex_2:int) -> bool:
         # Verifica existência de aresta
-        if self.graph[vertex_1-1][vertex_2-1]:
-            return True
-        return False
+        return True if self.graph[vertex_1-1][vertex_2-1] else False
     
     def count_edge(self) -> int:
         # Checa a quantidade de arestas
@@ -83,21 +79,16 @@ class BaseManipulation:
         # Checa a quantidade de vértices
         return self.vertex
     
-    def is_empty_graph(self):
+    def is_empty_graph(self) -> bool:
         # Checa se o grafo é vazio
-        ...
+        return True if self.vertex == 0 else False
     
-    def is_complete_graph(self):
+    def is_complete_graph(self) -> bool:
         # Checa se o grafo é completo
-        ...
+        edge_quantity = self.vertex * (self.vertex-1) / 2
+        return True if self.count_edge() == edge_quantity else False
 
-# vertices = {
-#     vertice[int]: {
-#         label[str],
-#         weight[int],
-#         vizinhança[list[int|str]],
-#     }
-# }
+
 # arestas = {
 #     aresta[int]: {
 #         label[str],
