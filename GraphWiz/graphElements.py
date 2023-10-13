@@ -1,27 +1,46 @@
 class ElementBase:
     def __init__(self) -> None:
-        self.__label:str=""
-        self.__weight:int=0
-        
-    def get_label(self) -> str: return self.__label
-    def get_weight(self) -> int: return self.__weight
-    def set_label(self, label:str) -> None: self.__label = label; return self
-    def set_weight(self, weight:int) -> None: self.__weight = weight; return self
+        self.__label:str|int=""
+        self.__weight:int=1
+    
+    @property
+    def label(self) -> str:
+        return self.__label
+    
+    @label.setter
+    def label(self, label:str) -> None:
+        self.__label = label
+    
+    @property
+    def weight(self) -> int:
+        return self.__weight
+    
+    @weight.setter
+    def weight(self, weight:int) -> None:
+        self.__weight = weight
     
 class Vertex(ElementBase):
-    def __init__(self, index:int) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.__neighbors:list[int|str]=[]
-        self.__index: int = index
-        
-    def get_index(self) -> str: return self.__index
-    def get_neighboors(self) -> list[int|str]: return self.__neighbors
-    def set_neighbors(self, neighbors:list[int|str]) -> None: self.__neighbors = neighbors; return self
 
 class Edge(ElementBase):
-    def __init__(self, vertex_pair:list[int|str]) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.__vertex_pair:list[Vertex]=vertex_pair
-        
-    def get_vertex_pair(self) -> list[Vertex]: return self.__vertex_pair
-    def set_vertex_pair(self, vertex_pair:list[Vertex]) -> None: self.__vertex_pair = vertex_pair; return self
+        self.__source:Vertex|None=None
+        self.__target:Vertex|None=None
+    
+    @property
+    def source(self) -> Vertex:
+        return self.__source
+    
+    @source.setter
+    def source(self, vertex:Vertex) -> None:
+        self.__source = vertex
+    
+    @property
+    def target(self) -> Vertex:
+        return self.__target
+
+    @target.setter
+    def target(self, vertex:Vertex) -> None:
+        self.__target = vertex
