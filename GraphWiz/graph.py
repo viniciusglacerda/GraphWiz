@@ -13,6 +13,10 @@ class Graph:
             self.vertices.update({index: v})
             
         self.edges:list[Edge] = []
+    
+    @property
+    def vertices(self):
+        return self.vertices
 
     def corresponding_edge(self, src_label:str|int, target_label:str|int) -> Edge | None:
         for edge in self.edges:
