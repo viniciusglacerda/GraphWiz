@@ -1,5 +1,6 @@
-from graphElements import Vertex, Edge
-from utils import BFS, DFS
+import re
+from GraphWiz.graphElements import Vertex, Edge
+from GraphWiz.utils import BFS, DFS, BridgeFinder, FleuryAlgorithm
 
 class Graph:
     def __init__(self, qtd_vertices:int=0, is_directed:bool=False, vertices_labels:list[str]=[]) -> None:
@@ -103,9 +104,11 @@ class Graph:
 
     def remove_edge(self, src_label:str|int, target_label:str|int) -> None:
         # Remoção de arestas
-        self.edges_list.remove(self.corresponding_edge(src_label, target_label))
+        edge = self.corresponding_edge(src_label, target_label)
+        if edge: self.edges_list.remove(edge)
         if not self.is_directed:
-            self.edges_list.remove(self.corresponding_edge(target_label, src_label))
+            edge = self.corresponding_edge(target_label, src_label)
+            if edge: self.edges_list.remove(edge)
     
     def vertex_weighting(self, vertex_label:str|int, weight:int) -> None:
         # Ponderação de vértices
@@ -143,9 +146,9 @@ class Graph:
         # Checagem de adjacencia entre vertices
         return True if self.corresponding_edge(src_label, target_label) else False
     
-    def edge_adjacency_check(self):
+    def edge_adjacency_check(self, edge1: Edge, edge2: Edge) -> bool:
         # Checagem de adjacencia entre arestas
-        ...
+        return edge1.target == edge2.source or edge1.source == edge2.target
     
     def exist_edge(self, src_label:str|int, target_label:str|int) -> bool:
         # Verifica existência de aresta
@@ -168,7 +171,17 @@ class Graph:
         # Checa se o grafo é completo
         edge_quantity = len(self.vertex_dict) * (len(self.vertex_dict)-1) / 2
         return True if self.count_edge() == edge_quantity else False
-    
+
+    def get_vertex_degree(self, vertex_label: str|int) -> int:
+        if vertex_label in self.vertices:
+            degree = 0
+            for edge in self.edges_list:
+                if edge.source.label == vertex_label or edge.target.label == vertex_label:
+                    degree += 1
+            return degree
+        else:
+            return 0
+
     def bfs(self, start_vertex:Vertex=None) -> tuple[dict]:
         if start_vertex is None:
             start_vertex = next(iter(self.vertices.values()), None)
@@ -188,3 +201,74 @@ class Graph:
             return dfs_instance.execute(start_vertex)
         else:
             return {}, {}, {}
+    
+    def bridge_naive_method(self) -> list[Edge]:
+        bf = BridgeFinder(self)
+        return bf.naive_bridges()
+
+    def bridge_tarjan_method(self) -> list[Edge]:
+        bf = BridgeFinder(self)
+        return bf.tarjan_bridges()
+
+    def eulerian_path(self, method:str="naive"):
+        fleury_algorithm = FleuryAlgorithm()
+
+        print("Caminho Euleriano:")
+        eulerian_path = fleury_algorithm.find_eulerian_path(self, method)
+        print(" -> ".join(eulerian_path))
+    
+    def to_gexf(self, file_path:str="", file_name:str="graph.gexf") -> None:
+        with open(file_path+file_name, 'w') as file:
+            file.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+            file.write('<gexf xmlns="http://www.gexf.net/1.2draft" version="1.2">\n')
+            file.write('\t<graph mode="static" defaultedgetype="undirected">\n')
+
+            # Escreve os vértices
+            file.write('\t\t<nodes>\n')
+            for vertex_label, vertex in self.vertices.items():
+                file.write(f'\t\t\t<node id="{vertex_label}" label="{vertex.label}" />\n')
+            file.write('\t\t</nodes>\n')
+
+            # Escreve as arestas
+            file.write('\t\t<edges>\n')
+            for edge in self.edges_list:
+                file.write(f'\t\t\t<edge source="{edge.source.label}" target="{edge.target.label}" />\n')
+            file.write('\t\t</edges>\n')
+
+            file.write('\t</graph>\n')
+            file.write('</gexf>\n')
+
+    def from_gexf(self, file_path: str="") -> None:
+        # Limpa o grafo atual antes de carregar um novo
+        self.vertices.clear()
+        self.edges_list.clear()
+
+        with open(file_path, 'r') as file:
+            in_nodes_section = False
+            in_edges_section = False
+
+            for line in file:
+                line = line.strip()
+
+                if line == '<nodes>':
+                    in_nodes_section = True
+                    in_edges_section = False
+                elif line == '<edges>':
+                    in_nodes_section = False
+                    in_edges_section = True
+                elif line in ('</nodes>', '</edges>'):
+                    in_nodes_section = False
+                    in_edges_section = False
+                elif in_nodes_section and line.startswith('<node '):
+                    match = re.search(r'label="([^"]+)"', line)
+                    if match:
+                        vertex_label = match.group(1)
+                        self.add_new_vertices(qtd=1, labels=[vertex_label])
+                elif in_edges_section and line.startswith('<edge '):
+                    source_match = re.search(r'source="([^"]+)"', line)
+                    target_match = re.search(r'target="([^"]+)"', line)
+
+                    if source_match and target_match:
+                        source_label = source_match.group(1)
+                        target_label = target_match.group(1)
+                        self.create_edge(str(source_label), str(target_label))
