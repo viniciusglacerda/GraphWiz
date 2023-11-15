@@ -156,15 +156,22 @@ class FleuryAlgorithm:
             # Verifica se a aresta é uma ponte
             return edge.label not in bridges_list
 
-        def dfs(current_vertex):
+        def dfs_iterative(start_vertex):
+            stack = [start_vertex]
             path = []
-            for edge in temp_edges:
-                if edge.source.label == current_vertex.label and is_valid_edge(edge):
-                    temp_edges.remove(edge)
-                    path += dfs(edge.target)
-                    path.append(f"({current_vertex.label} -> {edge.target.label})")
+            visited = set()
+
+            while stack:
+                current_vertex = stack.pop()
+                if current_vertex.label not in visited:
+                    visited.add(current_vertex.label)
+                    path.append(str(current_vertex.label))
+
+                    for edge in temp_edges:
+                        if edge.source.label == current_vertex.label and is_valid_edge(edge):
+                            stack.append(edge.target)
 
             return path
 
         start_vertex = next(iter(graph.vertices.values()))
-        return dfs(start_vertex)
+        return dfs_iterative(start_vertex)
