@@ -1,7 +1,7 @@
 # from graph import Graph
+from multiprocessing import Pool
 from GraphWiz.graphElements import Vertex, Edge
 from queue import SimpleQueue
-from copy import deepcopy
 
 class BFS:
     def __init__(self, graph) -> None:
@@ -72,27 +72,24 @@ class BridgeFinder:
     def __init__(self, graph) -> None:
         self.graph = graph
         self.original_level, _ = graph.bfs()
-    
+
     def is_bridge_naive(self, src_label: str | int, target_label: str | int) -> bool:
-        # Método "naive" para testar pontes usando BFS
+        original_edge_count = len(self.graph.edges)
+        self.graph.remove_edge(src_label, target_label)
+        modified_edge_count = len(self.graph.edges)
+        return original_edge_count != modified_edge_count
 
-        temp_graph = deepcopy(self.graph)
+    def _process_edge(self, edge):
+        if self.is_bridge_naive(edge.source.label, edge.target.label):
+            if edge.label:
+                return edge.label
+            else:
+                return (edge.source.label, edge.target.label)
+        return None
 
-        temp_graph.remove_edge(src_label, target_label)
-
-        level, _ = temp_graph.bfs()
-
-        return len(level) != len(self.original_level)
-    
     def naive_bridges(self) -> list:
-        bridges = []
-        for edge in self.graph.edges:
-            if self.is_bridge_naive(edge.source.label, edge.target.label):
-                if edge.label:
-                    bridges.append(edge.label)
-                else:
-                    bridges.append((edge.source.label, edge.target.label))
-        return bridges
+        with Pool() as pool:
+            return list(filter(None, pool.map(self._process_edge, self.graph.edges)))
 
     def tarjan_bridges(self) -> list[tuple[str | int, str | int]]:
         visited = set()
@@ -135,12 +132,7 @@ class FleuryAlgorithm:
         if not graph.vertices:
             return False
 
-        odd_degree_count = 0
-        for vertex in graph.vertices.values():
-            degree = graph.get_vertex_degree(vertex.label)
-            if degree % 2 != 0:
-                odd_degree_count += 1
-
+        odd_degree_count = sum(1 for vertex in graph.vertices.values() if graph.get_vertex_degree(vertex.label) % 2 != 0)
         return odd_degree_count == 0 or odd_degree_count == 2
 
     @staticmethod

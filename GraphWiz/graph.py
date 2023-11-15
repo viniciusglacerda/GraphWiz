@@ -213,7 +213,7 @@ class Graph:
     def eulerian_path(self, method:str="naive"):
         fleury_algorithm = FleuryAlgorithm()
 
-        print("Caminho Euleriano:")
+        print("Eulerian Path:")
         eulerian_path = fleury_algorithm.find_eulerian_path(self, method)
         print(" -> ".join(eulerian_path))
     
