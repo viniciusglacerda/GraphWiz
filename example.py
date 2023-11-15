@@ -29,21 +29,22 @@ def measure_time(graph, method):
     elapsed_time = end_time - start_time
     return elapsed_time
 
-size = 1000
-random_graph = generate_random_graph(size)
+if __name__ == "__main__":
+    size = 10
+    random_graph = generate_random_graph(size)
 
-if random_graph:
-    print(f"\nTesting with {size} vertices:")
-    # print("Random Graph:")
-    # random_graph.show_matrix()
-    # random_graph.show_list()
-    # print("\n")
-        
-    # Measure time for Naive Method
-    time_naive = measure_time(random_graph, method="naive")
-    print(f"Naive Method Time: {time_naive:.6f} seconds")
-    print("\n")
+    if random_graph:
+        print(f"\nTesting with {size} vertices:")
+        # print("Random Graph:")
+        # random_graph.show_matrix()
+        # random_graph.show_list()
+        # print("\n")
+            
+        # Measure time for Naive Method
+        time_naive = measure_time(random_graph, method="naive")
+        print(f"Naive Method Time: {time_naive:.6f} seconds")
+        print("\n")
 
-    # Measure time for Tarjan Method
-    time_tarjan = measure_time(random_graph, method="tarjan")
-    print(f"Tarjan Method Time: {time_tarjan:.6f} seconds")
+        # Measure time for Tarjan Method
+        time_tarjan = measure_time(random_graph, method="tarjan")
+        print(f"Tarjan Method Time: {time_tarjan:.6f} seconds")
