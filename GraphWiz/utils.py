@@ -3,6 +3,15 @@ from multiprocessing import Pool
 from GraphWiz.graphElements import Vertex, Edge
 from queue import SimpleQueue
 
+def print_progress_bar(iteration, total, prefix='', suffix='', length=30, fill='█'):
+    percent = ("{0:.1f}").format(100 * (iteration / float(total)))
+    filled_length = int(length * iteration // total)
+    bar = fill * filled_length + '-' * (length - filled_length)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end='\r')
+    # Print newline on completion
+    if iteration == total:
+        print()
+
 class BFS:
     def __init__(self, graph) -> None:
         self.graph = graph
@@ -79,17 +88,22 @@ class BridgeFinder:
         modified_edge_count = len(self.graph.edges)
         return original_edge_count != modified_edge_count
 
-    def _process_edge(self, edge):
+    def _process_edge(self, args):
+        edge, i, tot_v = args
+        result = None
         if self.is_bridge_naive(edge.source.label, edge.target.label):
             if edge.label:
-                return edge.label
+                result = edge.label
             else:
-                return (edge.source.label, edge.target.label)
-        return None
+                result = (edge.source.label, edge.target.label)
+        print_progress_bar(i, tot_v, prefix='Naive Bridges Progress:', suffix='Complete', length=50)
+        return result
 
     def naive_bridges(self) -> list:
         with Pool() as pool:
-            return list(filter(None, pool.map(self._process_edge, self.graph.edges)))
+            args_list = [(edge, i, len(self.graph.edges)) for i, edge in enumerate(self.graph.edges)]
+            results = list(filter(None, pool.map(self._process_edge, args_list)))
+        return results
 
     def tarjan_bridges(self) -> list[tuple[str | int, str | int]]:
         visited = set()
@@ -132,7 +146,12 @@ class FleuryAlgorithm:
         if not graph.vertices:
             return False
 
-        odd_degree_count = sum(1 for vertex in graph.vertices.values() if graph.get_vertex_degree(vertex.label) % 2 != 0)
+        odd_degree_count = 0
+
+        for i, vertex in enumerate(graph.vertices.values()):
+            odd_degree_count += 1 if graph.get_vertex_degree(vertex.label) % 2 != 0 else 0
+            print_progress_bar(i + 1, len(graph.vertices), prefix='Verifying Eulerian Properties:', suffix='Complete', length=50)
+
         return odd_degree_count == 0 or odd_degree_count == 2
 
     @staticmethod
@@ -153,6 +172,8 @@ class FleuryAlgorithm:
             path = []
             visited = set()
 
+            i=1
+            tot_v = len(graph.vertices)
             while stack:
                 current_vertex = stack.pop()
                 if current_vertex.label not in visited:
@@ -162,6 +183,8 @@ class FleuryAlgorithm:
                     for edge in temp_edges:
                         if edge.source.label == current_vertex.label and is_valid_edge(edge):
                             stack.append(edge.target)
+                    print_progress_bar(i, tot_v, prefix='DFS Progress:', suffix='Complete', length=50)
+                    i+=1
 
             return path
 

@@ -1,6 +1,13 @@
 import random
 import time
 from GraphWiz import Graph
+from GraphWiz.utils import print_progress_bar
+import signal
+import sys
+
+def signal_handler(sig, frame):
+    print("Ctrl+C pressed. Exiting...")
+    sys.exit(0)
 
 def generate_random_graph(num_vertices):
     if num_vertices <= 0:
@@ -19,6 +26,7 @@ def generate_random_graph(num_vertices):
                 vertex_j_label = random_graph.vertices[j].label
 
                 random_graph.create_edge(vertex_i_label, vertex_j_label)
+        print_progress_bar(i+1, num_vertices, prefix='Edge Add Progress:', suffix='Complete', length=50)
 
     return random_graph
 
@@ -30,7 +38,10 @@ def measure_time(graph, method):
     return elapsed_time
 
 if __name__ == "__main__":
-    size = 10
+    # Configurando o tratamento de sinal para Ctrl+C
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    size = 100
     random_graph = generate_random_graph(size)
 
     if random_graph:

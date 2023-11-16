@@ -1,6 +1,6 @@
 import re
 from GraphWiz.graphElements import Vertex, Edge
-from GraphWiz.utils import BFS, DFS, BridgeFinder, FleuryAlgorithm
+from GraphWiz.utils import BFS, DFS, BridgeFinder, FleuryAlgorithm, print_progress_bar
 
 class Graph:
     def __init__(self, qtd_vertices:int=0, is_directed:bool=False, vertices_labels:list[str]=[]) -> None:
@@ -13,6 +13,7 @@ class Graph:
             try: v.label = vertices_labels[index]
             except IndexError: v.label = index+1
             self.vertex_dict.update({index: v})
+            print_progress_bar(index+1, qtd_vertices, prefix='Graph Creation Progress:', suffix='Complete', length=50)
             
         self.edges_list:list[Edge] = []
     
