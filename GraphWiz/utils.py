@@ -19,25 +19,28 @@ class BFS:
         self.level = {}
         self.predecessor = {}
 
-    def execute(self, start_vertex:Vertex) -> tuple[dict, dict]:
+    def execute(self, start_vertex: Vertex) -> tuple[dict, dict]:
         visited = set()
         queue = SimpleQueue()
         queue.put(start_vertex)
         self.level[start_vertex.label] = 0
         self.predecessor[start_vertex.label] = None
 
+        # Usando um dicionário para armazenar as adjacências
+        adjacency_dict = {vertex.label: [edge.target for edge in self.graph.edges if edge.source.label == vertex.label] for vertex in self.graph.vertices.values()}
+        vertices = {vertex.label: vertex for vertex in self.graph.vertices.values()}
+
         while not queue.empty():
-            current:Vertex = queue.get()
+            current: Vertex = queue.get()
             if current.label not in visited:
                 visited.add(current.label)
 
-                for edge in self.graph.edges:
-                    if edge.source.label == current.label:
-                        neighbor = edge.target
-                        if neighbor.label not in visited:
-                            queue.put(neighbor)
-                            self.level[neighbor.label] = self.level[current.label] + 1
-                            self.predecessor[neighbor.label] = current.label
+                for neighbor_label in adjacency_dict[current.label]:
+                    if neighbor_label not in visited:
+                        neighbor = vertices[neighbor_label.label]
+                        queue.put(neighbor)
+                        self.level[neighbor.label] = self.level[current.label] + 1
+                        self.predecessor[neighbor.label] = current.label
 
         return self.level, self.predecessor
 
