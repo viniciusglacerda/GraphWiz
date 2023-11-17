@@ -3,6 +3,15 @@ from GraphWiz.graphElements import Vertex, Edge
 from queue import SimpleQueue
 from copy import deepcopy
 
+def print_progress_bar(iteration, total, prefix='', suffix='', length=30, fill='█'):
+    percent = ("{0:.1f}").format(100 * (iteration / float(total)))
+    filled_length = int(length * iteration // total)
+    bar = fill * filled_length + '-' * (length - filled_length)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end='\r')
+    # Print newline on completion
+    if iteration == total:
+        print()
+
 class BFS:
     def __init__(self, graph) -> None:
         self.graph = graph
@@ -44,7 +53,7 @@ class DFS:
         visited = set()
         self.parent[start_vertex.label] = None
 
-        def dfs_recursive(vertex: Vertex) -> None:
+        def dfs_interactive(vertex: Vertex) -> None:
             nonlocal visited
 
             visited.add(vertex.label)
@@ -56,7 +65,7 @@ class DFS:
                     neighbor = edge.target
                     if neighbor.label not in visited:
                         self.parent[neighbor.label] = vertex.label
-                        dfs_recursive(neighbor)
+                        dfs_interactive(neighbor)
 
             self.time += 1
             self.finish_time[vertex.label] = self.time
@@ -64,7 +73,7 @@ class DFS:
         # Verifica se o vértice inicial existe no grafo antes de iniciar a DFS
         vertex_labels = [lbl.label for lbl in list(self.graph.vertices.values())]
         if start_vertex.label in vertex_labels:
-            dfs_recursive(start_vertex)
+            dfs_interactive(start_vertex)
 
         return self.discovery_time, self.finish_time, self.parent
 
