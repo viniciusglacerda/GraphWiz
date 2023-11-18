@@ -1,6 +1,6 @@
 import re
 from GraphWiz.graphElements import Vertex, Edge
-from GraphWiz.utils import BFS, DFS, BridgeFinder, FleuryAlgorithm
+from GraphWiz.utils import BFS, DFS, BridgeFinder, FleuryAlgorithm, print_progress_bar
 
 class Graph:
     def __init__(self, qtd_vertices:int=0, is_directed:bool=False, vertices_labels:list[str]=[]) -> None:
@@ -13,6 +13,7 @@ class Graph:
             try: v.label = vertices_labels[index]
             except IndexError: v.label = index+1
             self.vertex_dict.update({index: v})
+            print_progress_bar(index+1, qtd_vertices, prefix='Graph Creation Progress:', suffix='Complete', length=50)
             
         self.edges_list:list[Edge] = []
     
@@ -213,8 +214,8 @@ class Graph:
     def eulerian_path(self, method:str="naive"):
         fleury_algorithm = FleuryAlgorithm()
 
-        print("Caminho Euleriano:")
         eulerian_path = fleury_algorithm.find_eulerian_path(self, method)
+        print("Eulerian Path:")
         print(" -> ".join(eulerian_path))
     
     def to_gexf(self, file_path:str="", file_name:str="graph.gexf") -> None:
