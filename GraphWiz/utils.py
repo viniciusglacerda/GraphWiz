@@ -1,7 +1,6 @@
 # from graph import Graph
 from GraphWiz.graphElements import Vertex, Edge
 from queue import SimpleQueue
-from copy import deepcopy
 
 def print_progress_bar(iteration, total, prefix='', suffix='', length=30, fill='█'):
     percent = ("{0:.1f}").format(100 * (iteration / float(total)))
@@ -19,25 +18,28 @@ class BFS:
         self.level = {}
         self.predecessor = {}
 
-    def execute(self, start_vertex:Vertex) -> tuple[dict, dict]:
+    def execute(self, start_vertex: Vertex) -> tuple[dict, dict]:
         visited = set()
         queue = SimpleQueue()
         queue.put(start_vertex)
         self.level[start_vertex.label] = 0
         self.predecessor[start_vertex.label] = None
 
+        # Usando um dicionário para armazenar as adjacências
+        adjacency_dict = {vertex.label: [edge.target for edge in self.graph.edges if edge.source.label == vertex.label] for vertex in self.graph.vertices.values()}
+        vertices = {vertex.label: vertex for vertex in self.graph.vertices.values()}
+
         while not queue.empty():
-            current:Vertex = queue.get()
+            current: Vertex = queue.get()
             if current.label not in visited:
                 visited.add(current.label)
 
-                for edge in self.graph.edges:
-                    if edge.source.label == current.label:
-                        neighbor = edge.target
-                        if neighbor.label not in visited:
-                            queue.put(neighbor)
-                            self.level[neighbor.label] = self.level[current.label] + 1
-                            self.predecessor[neighbor.label] = current.label
+                for neighbor_label in adjacency_dict[current.label]:
+                    if neighbor_label not in visited:
+                        neighbor = vertices[neighbor_label.label]
+                        queue.put(neighbor)
+                        self.level[neighbor.label] = self.level[current.label] + 1
+                        self.predecessor[neighbor.label] = current.label
 
         return self.level, self.predecessor
 
@@ -53,27 +55,26 @@ class DFS:
         visited = set()
         self.parent[start_vertex.label] = None
 
-        def dfs_interactive(vertex: Vertex) -> None:
-            nonlocal visited
+        stack = SimpleQueue()
+        stack.put(start_vertex)
 
-            visited.add(vertex.label)
-            self.time += 1
-            self.discovery_time[vertex.label] = self.time
+        while not stack.empty():
+            current_vertex = stack.get()
 
-            for edge in self.graph.edges:
-                if edge.source.label == vertex.label:
-                    neighbor = edge.target
-                    if neighbor.label not in visited:
-                        self.parent[neighbor.label] = vertex.label
-                        dfs_interactive(neighbor)
+            if current_vertex.label not in visited:
+                visited.add(current_vertex.label)
+                self.time += 1
+                self.discovery_time[current_vertex.label] = self.time
 
-            self.time += 1
-            self.finish_time[vertex.label] = self.time
+                for edge in self.graph.edges:
+                    if edge.source.label == current_vertex.label:
+                        neighbor = edge.target
+                        if neighbor.label not in visited:
+                            self.parent[neighbor.label] = current_vertex.label
+                            stack.put(neighbor)
 
-        # Verifica se o vértice inicial existe no grafo antes de iniciar a DFS
-        vertex_labels = [lbl.label for lbl in list(self.graph.vertices.values())]
-        if start_vertex.label in vertex_labels:
-            dfs_interactive(start_vertex)
+                self.time += 1
+                self.finish_time[current_vertex.label] = self.time
 
         return self.discovery_time, self.finish_time, self.parent
 
@@ -83,58 +84,83 @@ class BridgeFinder:
         self.original_level, _ = graph.bfs()
     
     def is_bridge_naive(self, src_label: str | int, target_label: str | int) -> bool:
-        # Método "naive" para testar pontes usando BFS
+        original_edge = self.graph.corresponding_edge(src_label, target_label)
 
-        temp_graph = deepcopy(self.graph)
-
-        temp_graph.remove_edge(src_label, target_label)
-
-        level, _ = temp_graph.bfs()
-
+        if original_edge is None:
+            return False
+        
+        self.graph.edges_list.remove(original_edge)
+        level, _ = self.graph.bfs()
+        self.graph.edges_list.append(original_edge)
+        
         return len(level) != len(self.original_level)
-    
+
     def naive_bridges(self) -> list:
-        bridges = []
-        for edge in self.graph.edges:
+        bridges = set()
+        total_edges = len(self.graph.edges_list)
+        
+        for i, edge in enumerate(self.graph.edges_list.copy(), start=1):
             if self.is_bridge_naive(edge.source.label, edge.target.label):
                 if edge.label:
-                    bridges.append(edge.label)
+                    bridges.add(edge.label)
                 else:
-                    bridges.append((edge.source.label, edge.target.label))
-        return bridges
+                    bridges.add((edge.source.label, edge.target.label))
+            
+            print_progress_bar(i, total_edges, prefix='Naive Bridges Progress:', suffix='Complete', length=50)
+
+        return list(bridges)
 
     def tarjan_bridges(self) -> list[tuple[str | int, str | int]]:
         visited = set()
         result = []
-        discovery_time, finish_time, parent = self.graph.dfs()
+        discovery_time = {}
+        finish_time = {}
+        parent = {}
 
-        def tarjan_recursive(vertex: Vertex, time: int) -> list[tuple[str | int, str | int]]:
-            nonlocal visited
-            nonlocal result
+        stack = []
+        time = 0
 
-            visited.add(vertex.label)
-            discovery_time[vertex.label] = time
-            low_time = time
+        total_vertices = len(self.graph.vertices)
+        progress_prefix = 'Tarjan Bridges Progress:'
 
-            for edge in self.graph.edges_list:
-                if edge.source.label == vertex.label:
-                    neighbor = edge.target
-                    if neighbor.label not in visited:
-                        low_time_neighbor = tarjan_recursive(neighbor, time + 1)
-
-                        low_time = min(low_time, low_time_neighbor)
-
-                        if low_time_neighbor > discovery_time[vertex.label]:
-                            result.append((vertex.label, neighbor.label))
-
-                    elif neighbor.label != parent[vertex.label]:
-                        low_time = min(low_time, discovery_time[neighbor.label])
-
-            return low_time
-
-        for vertex in self.graph.vertices.values():
+        for i, vertex in enumerate(self.graph.vertices.values(), start=1):
             if vertex.label not in visited:
-                tarjan_recursive(vertex, 0)
+                stack.append((vertex, 0))
+
+            while stack:
+                current_vertex, current_time = stack.pop()
+
+                if current_vertex.label not in visited:
+                    visited.add(current_vertex.label)
+                    discovery_time[current_vertex.label] = current_time
+                    low_time = current_time
+
+                    for edge in self.graph.edges_list:
+                        if edge.source.label == current_vertex.label:
+                            neighbor = edge.target
+                            if neighbor.label not in visited:
+                                stack.append((neighbor, current_time + 1))
+                            elif neighbor.label != parent.get(current_vertex.label):
+                                low_time = min(low_time, discovery_time[neighbor.label])
+
+                    stack.append((current_vertex, low_time))
+
+                    if low_time == current_time and parent.get(current_vertex.label) is not None:
+                        result.append((parent[current_vertex.label], current_vertex.label))
+
+                    time += 1
+                    finish_time[current_vertex.label] = time
+
+                else:
+                    if current_vertex.label not in finish_time:
+                        time += 1
+                        finish_time[current_vertex.label] = time
+
+                    if parent.get(current_vertex.label) is not None:
+                        low_time_parent = min(discovery_time[current_vertex.label], discovery_time[parent[current_vertex.label]])
+                        discovery_time[parent[current_vertex.label]] = low_time_parent
+
+            print_progress_bar(i, total_vertices, prefix=progress_prefix, suffix='Complete', length=50)
 
         return result
 
@@ -145,10 +171,10 @@ class FleuryAlgorithm:
             return False
 
         odd_degree_count = 0
-        for vertex in graph.vertices.values():
-            degree = graph.get_vertex_degree(vertex.label)
-            if degree % 2 != 0:
-                odd_degree_count += 1
+
+        for i, vertex in enumerate(graph.vertices.values()):
+            odd_degree_count += 1 if graph.get_vertex_degree(vertex.label) % 2 != 0 else 0
+            print_progress_bar(i + 1, len(graph.vertices), prefix='Verifying Eulerian Properties:', suffix='Complete', length=50)
 
         return odd_degree_count == 0 or odd_degree_count == 2
 
@@ -170,6 +196,8 @@ class FleuryAlgorithm:
             path = []
             visited = set()
 
+            i=1
+            tot_v = len(graph.vertices)
             while stack:
                 current_vertex = stack.pop()
                 if current_vertex.label not in visited:
@@ -179,6 +207,8 @@ class FleuryAlgorithm:
                     for edge in temp_edges:
                         if edge.source.label == current_vertex.label and is_valid_edge(edge):
                             stack.append(edge.target)
+                    print_progress_bar(i, tot_v, prefix='DFS Progress:', suffix='Complete', length=50)
+                    i+=1
 
             return path
 
