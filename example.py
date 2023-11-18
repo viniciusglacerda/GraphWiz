@@ -51,11 +51,11 @@ if __name__ == "__main__":
         # random_graph.show_list()
         # print("\n")
             
-        # Measure time for Naive Method
+        print("\n *** Measure time for Naive Method ***\n")
         time_naive = measure_time(random_graph, method="naive")
         print(f"Naive Method Time: {time_naive:.6f} seconds")
         print("\n")
 
-        # Measure time for Tarjan Method
+        print(" *** Measure time for Tarjan Method ***\n")
         time_tarjan = measure_time(random_graph, method="tarjan")
         print(f"Tarjan Method Time: {time_tarjan:.6f} seconds")
